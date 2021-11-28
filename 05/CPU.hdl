@@ -1,0 +1,112 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Not a single line of this can be understood without looking at
+    // the Hack Language Specification and the CPU internals diagram.
+
+    // ALU area
+    // The ALU takes two inputs and six control bits.
+    // It emits three outputs, one for the outM and two control bits
+    // for the PC.
+    // C instruciton: 111accccccdddjjj
+
+    // FIRST ALU INPUT | THE D REGISTER
+    // It only communicates with the ALU, for both the input and output.
+    // Its control bit comes from the destination portion "d" of the
+    // C instruction: it's the 5th bit, deciding if the computation
+    // has to be stored inside the D register or not.
+    And(a=instruction[15], b=instruction[4], out=loadD);
+    DRegister(in=outALU, load=loadD, out=inAlu1);
+    
+    // SECOND ALU INPUT
+    // It comes from a Mux, because it can come either from the
+    // memory (inM) or the A register.
+    // The control bit is the C instruction's 13th MSB, the "a" bit.
+    Mux16(a=outARegister, b=inM, sel=instruction[12], out=inAlu2);
+
+    // ALU CONTROL BITS
+    // These bits all come from the "comp" part of the C instruction.
+    ALU(x=inAlu1, y=inAlu2, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outALU, out=outALUDestA,  out=outM, zr=zeroALU, ng=negativeALU);
+
+
+    // PC area
+    // The Program Counter is fully described by the CPU internals diagram,
+    // exception made for the control bits.
+
+    // First control bit checks if comp > 0
+    Not(in=zeroALU, out=notZeroAlu);
+    Not(in=negativeALU, out=positiveALU);
+    And(a=notZeroAlu, b=positiveALU, out=greaterThanZeroALU);
+    And(a=greaterThanZeroALU, b=instruction[0], out=outJump0);
+
+    // Second control bit checks zr
+    And(a=zeroALU, b=instruction[1], out=outJump1);
+
+    // Third controlb it checks ng
+    And(a=negativeALU, b=instruction[2], out=outJump2);
+
+    // We take everything together with OR for load bit
+    Or(a=outJump0, b=outJump1, out=halfJumpLoad);
+    Or(a=halfJumpLoad, b=outJump2, out=fullJumpLoad);
+
+    // Are we in a C instruction?
+    And(a=instruction[15], b=fullJumpLoad, out=jump);
+
+    // Negate that for inc bit
+    Not(in=jump, out=inc);
+
+    PC(in=nextInstruction, load=jump, inc=inc, reset=reset, out[0..14]=pc);
+
+    
+    // A Register area
+    // The A register can be the destination of a C instruction
+    // computation (if 111acccccc1ddjjj) or it just retrieves the
+    // next instruction from the ROM.
+    Not(in=instruction[15], out=isAInstruction);
+    And(a=instruction[15], b=instruction[5], out=loadAFromAlu);
+    Or(a=isAInstruction, b=loadAFromAlu, out=loadA);
+
+    Mux16(a=instruction, b=outALUDestA, sel=instruction[15], out=outInstruction);
+    ARegister(in=outInstruction, load=loadA, out=outARegister, out=nextInstruction, out[0..14]=addressM);
+    
+    // We only write memory when instruction is C and 4th bit is 1
+    And(a=instruction[3], b=instruction[15], out=writeM);
+}
