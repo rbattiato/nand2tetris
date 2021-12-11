@@ -1,0 +1,14 @@
+{
+  "name": "jack-vm-translator",
+  "version": "1.0.0",
+  "description": "Implementation of the Jack Virtual Machine from the Nand2Tetris course",
+  "main": "VMTranslator.js",
+  "scripts": {
+    "compile": "tsc"
+  },
+  "author": "Riccardo Mario Battiato",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.11.12"
+  }
+}
