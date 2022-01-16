@@ -1,0 +1,16 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+/** Initializes a new game and starts running it */
+class Main {
+    function void main() {
+        var DinoGame game;
+        let game = DinoGame.new();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

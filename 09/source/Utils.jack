@@ -1,0 +1,66 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+/** Utility functions. */
+class Utils {
+    /** Turns an integer value into a fixed size string
+    * as specified by limit. Fills the string with zeroes
+    * if needed
+    */
+    function String padZero(int value, int limit) {
+        var String str, final; // working and final strings
+        var int diff, count; // zeros to add, counter for loop
+        var char zeroChar;
+        let zeroChar = 48; // "0"
+
+        /** 1. Convert the integer to a working string */
+        let str = String.new(limit);
+        do str.setInt(value);
+
+        /** Compute the amount of zeroes to add */
+        let diff = limit - str.length();
+
+        /** Add the needed amount of zeroes to final string */
+        let final = String.new(limit);
+        while (diff > 0) {
+            do final.appendChar(zeroChar);
+            let diff = diff - 1;
+        }
+
+        let count = 0;
+        /** Append the rest of the string value */
+        while (count < str.length()) {
+            do final.appendChar(str.charAt(count));
+            let count = count + 1;
+        }
+
+        do str.dispose();
+        return final;
+    }
+
+    /** Checks if a is multiple of b */
+    function boolean isMultiple(int a, int b) {
+        var int counter;
+        let counter = a;
+
+        while (counter > 0) {
+            let counter = counter - b;
+        }
+
+        if (counter = 0) { return true; }
+        return false;
+    }
+
+    /** Given a row and a column, finds the location on RAM */
+    function int getScreenLocation(int col, int row) {
+        return ((row * 32) + (col / 16));
+    }
+
+    /* Checks if the given address is a legal screen address */
+    function boolean isLegalScreenAddress(int address) {
+        return address < 8192;
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "jack-analyzer",
+  "version": "1.0.0",
+  "description": "Implementation of the Jack Analyzer from the Nand2Tetris course",
+  "main": "JackAnalyzer.js",
+  "scripts": {
+    "compile": "tsc"
+  },
+  "author": "Riccardo Mario Battiato",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.11.12"
+  },
+  "dependencies": {
+    "xmlbuilder2": "^3.0.2"
+  }
+}

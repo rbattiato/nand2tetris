@@ -1,0 +1,146 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+/** Implements the hitbox, basicly a rectangle. */
+class Hitbox {
+    field int x1, y1, x2, y2; // top-left and bottom-right corners
+
+    /** Creates a Hitbox. */
+    constructor Hitbox new(int Ax1, int Ay1, int Ax2, int Ay2) {
+        do translate(Ax1, Ay1, Ax2, Ay2);
+        return this;
+    }
+
+    /** Basic getters */
+
+    /** Get x1 */
+    method int getX1() {
+        return x1;
+    }
+
+    /** Get y1 */
+    method int getY1() {
+        return y1;
+    }
+
+    /** Get x2 */
+    method int getX2() {
+        return x2;
+    }
+
+    /** Get y2 */
+    method int getY2() {
+        return y2;
+    }
+
+    /** Moves the hitbox to a new location */
+    method void translate(int Ax1, int Ay1, int Ax2, int Ay2) {
+        let x1 = Ax1;
+        let y1 = Ay1;
+        let x2 = Ax2;
+        let y2 = Ay2;
+        return;
+    }
+
+    /** Moves the hitbox top by a certain length, in pixels. */
+    method void moveTop(int length) {
+        do paint(false);
+        let y1 = y1 - length;
+        let y2 = y2 - length;
+
+        if (y2 > 0) { do paint(true); }
+        return;
+    }
+
+
+    /** Moves the hitbox right by a certain length, in pixels. */
+    method void moveRight(int length) {
+        do paint(false);
+        let x1 = x1 + length;
+        let x2 = x2 + length;
+
+        if (x1 < 511) { do paint(true); }
+        return;
+    }
+
+    /** Moves the hitbox bottom by a certain length, in pixels. */
+    method void moveBottom(int length) {
+        do paint(false);
+        let y1 = y1 + length;
+        let y2 = y2 + length;
+
+        if (y1 < 255) { do paint(true); }
+        return;
+    }
+
+    /** Moves the hitbox left by a certain length, in pixels. */
+    method void moveLeft(int length) {
+        do paint(false);
+        let x1 = x1 - length;
+        let x2 = x2 - length;
+
+        if (x2 > 0) { do paint(true); }
+        return;
+    }
+
+    /** Draws/erases the hitbox, taking care of cutting out the off-screen bits. */
+    method void paint(boolean draw) {
+        var int paintX1, paintY1, paintX2, paintY2;
+
+        let paintX1 = 0;
+        let paintY1 = 0;
+        let paintX2 = 511;
+        let paintY2 = 255;
+        do Screen.setColor(draw);
+
+        if ((x1 > paintX1) & (x1 < 511)) { let paintX1 = x1; }
+        if ((y1 > paintY1) & (y1 < 255)) { let paintY1 = y1; }
+        if ((x2 > 0) & (x2 < paintX2)) { let paintX2 = x2; }
+        if ((y2 > 0) & (y2 < paintY2)) { let paintY2 = y2; }
+
+        if (isVisible()) {
+            do Screen.drawRectangle(paintX1, paintY1, paintX2, paintY2);
+        }
+
+        return;
+    }
+
+    /** Checks if the hitbox is at least partially visible on the screen. */
+    method boolean isVisible() {
+        var boolean visibleX;
+        var boolean visibleY;
+
+        let visibleX = ((x1 > 0) & (x1 < 511)) | ((x2 > 0) & (x2 < 511));
+        let visibleY = ((y1 > 0) & (y1 < 255)) | ((y2 > 0) & (y2 < 255));
+
+        return visibleX & visibleY;
+    }
+
+    /** Checks if this hitbox is colliding with another hitbox */
+    method boolean isColliding(Hitbox other) {
+        var int Ax1, Ay1, Ax2, Ay2;
+        var boolean collisionX, collisionY;
+
+        /** Retrieve the other hitbox coordinates */
+        let Ax1 = other.getX1();
+        let Ay1 = other.getY1();
+        let Ax2 = other.getX2();
+        let Ay2 = other.getY2();
+
+        /** Basicly, we have two segments to check for each direction. */
+        
+        let collisionX = ~(((Ax1 - x2) > 0) | ((x1 - Ax2) > 0));
+        let collisionY = ~(((Ay1 - y2) > 0) | ((y1 - Ay2) > 0));
+
+        return collisionX & collisionY;
+    }
+
+    /** Disposes this hitbox */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

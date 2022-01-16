@@ -1,0 +1,194 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+/** Implements the Dino game. */
+class DinoGame {
+    field Score score;
+    field Dinosaur dinosaur;
+    field Array obstacles;
+    field int obstaclesCount;
+    static int obstaclesLimit;
+
+    /** Constructs a new Dino game */
+    constructor DinoGame new() {
+        let score = Score.new();
+        let obstaclesCount = 0;
+        let obstaclesLimit = 10;
+        let dinosaur = Dinosaur.new();
+        let obstacles = Array.new(obstaclesLimit);
+        return this;
+    }
+
+    /** Disposes this game. */
+    method void dispose() {
+        do score.dispose();
+        do dinosaur.dispose();
+        do obstacles.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Causes the dinosaur to jump.  */
+    method void jump() {
+        return;
+    }
+
+    /** Runs the game: moves the landscape and checks for the user input. */
+    method void run() {
+        var char key; // the key currently pressed by the user
+        var boolean exit;
+        let exit = false;
+        do printInstructions();
+
+        while (~exit) {
+            let key = Keyboard.keyPressed();
+
+            do Sys.wait(5);  // delays the next movement
+            if (progressGame()) { let exit = true; }
+
+            if (key = 32) { do dinosaur.jump(); }
+            if (key = 81)  { let exit = true; }     // q key
+     } // while
+
+     do printGameOver();
+     return;
+    }
+
+    /** Manages all the game parts in the cycle. Returns if the game is over */
+    method boolean progressGame() {
+
+        /** Since obstacles generation is based on score, we synchronize them */
+        if (hasToGenerateObstacle()) {
+                // create new obstacle
+                let obstacles[obstaclesCount] = createObstacle();
+                if (obstaclesCount < (obstaclesLimit - 1)) {
+                    let obstaclesCount = obstaclesCount + 1;
+                } else {
+                    let obstaclesCount = 0;
+                }
+            }
+        if (manageObstacles()) { return true; }
+        do score.increase();
+        do dinosaur.move();
+        return false;
+    }
+
+    /** Checks if, according to the score, we need to generate an obstacle.
+    *   The scale is as follows:
+    *   0 - 199 points: an obstacle every 50 points increase
+    *   200 - 499 points: an obstacle every 40 points increase
+    *   500 - 999 points: an obstacle every 30 points increase
+    *   1000 - 4999 points: an obstacle every 20 points increase
+    *   5000 - 9999 points: an obstacle every 10 points increase
+    *   10000 - 32766 points: an obstacle every 5 points increase
+    */
+    method boolean hasToGenerateObstacle() {
+        var int scoreValue, threshold;
+        let scoreValue = score.getValue();
+
+        if (scoreValue = 0) { return true; } 
+
+        let threshold = 25;     
+        if (scoreValue < 10000) { let threshold = 50; }
+        if (scoreValue < 5000) { let threshold = 100; }
+        if (scoreValue < 1000) { let threshold = 120; }
+        if (scoreValue < 500) { let threshold = 150; }
+        if (scoreValue < 200) { let threshold = 200; }
+
+        return Utils.isMultiple(scoreValue, threshold);
+    }
+
+    /** 
+     *   Unified, optimized code to perform operations on every obstacle
+     *   Iterating only once per cycle. Returns true if the game is over.
+     */
+     method boolean manageObstacles() {
+         var Hitbox dinoHitbox;
+         var int i;
+
+         let i = 0;
+         let dinoHitbox = dinosaur.getHitbox();
+
+         while (i < obstaclesLimit) {
+            if (~(obstacles[i] = null)) {
+                 // 1. Move obstacle
+                do moveObstacle(obstacles[i], 2);
+
+                // 2. Check for collision
+                if (isGameOver(obstacles[i], dinoHitbox)) {
+                    return true;
+                }
+
+                // 3. Clear obstacles that went off screen
+                do clearObstacle(i);
+            }
+
+             let i = i + 1;
+         }
+         
+         return false;
+     }
+
+
+    /** Creates a new obstacle and returns its pointer.
+    *   Horizontal obstacle coordinates vary pseudo-randomically.
+    */
+    method Obstacle createObstacle() {
+        var Obstacle obstacle;
+        let obstacle = Obstacle.new();
+        return obstacle;
+    }
+
+    /** Moves left the obstacle of a given amount of pixels. */
+    method void moveObstacle(Obstacle currentObstacle, int distance) {
+        do currentObstacle.moveLeft(distance);
+        // Clear the left end of the screen
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 168, 49, 184);
+
+        return;
+    }
+
+    /** Checks if dinosaur's hitbox and one of the obstacles have a collision. */
+    method boolean isGameOver(Obstacle currentObstacle, Hitbox dinoHitbox) {
+        var Hitbox currentHitbox;
+        let currentHitbox = currentObstacle.getHitbox();
+
+        if (dinoHitbox.isColliding(currentHitbox)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /** Disposes any obstacle that is not visible on screen anymore.
+    */
+    method void clearObstacle(int currentIndex) {
+        var Obstacle currentObstacle;
+        let currentObstacle = obstacles[currentIndex];
+
+        if (currentObstacle.readyToClear()) {
+            do currentObstacle.dispose();
+            let obstacles[currentIndex] = null;
+        }
+
+        return;
+    }
+
+    method void printInstructions() {
+        do Output.moveCursor(21, 15);
+        do Output.printString("Press SPACE to jump or Q to quit!");
+        return;
+    }
+
+    method void printGameOver() {
+        do Output.moveCursor(21, 15);
+        do Output.printString("                                 ");
+        do Output.moveCursor(21, 28);
+        do Output.printString("GAME OVER");
+        return;
+    }
+}

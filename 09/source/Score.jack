@@ -1,0 +1,46 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+/** Implements the score counter graphical element. */
+class Score {
+    field int value; // actual value to be displayed
+
+    /** Constructs a new counter and initializes it to 0. */
+    constructor Score new() {
+        let value = 0;
+        return this;
+    }
+
+    /** Value getter */
+    method int getValue() {
+        return value;
+    }
+
+    /** Draws the score counter on the screen. */
+    method void draw() {
+        var String scoreToPrint;
+        let scoreToPrint = Utils.padZero(value, 5); // we won't need more than 5 digits
+        do Output.moveCursor(3, 59);
+        do Output.printString(scoreToPrint);
+        do scoreToPrint.dispose();
+        return;
+    }
+
+    /** Increases the value by 1 unit and refreshes the UI. */
+    method void increase() {
+        if (value < 32767) {
+            let value = value + 1;
+            do draw();
+        }
+        return;
+    }
+
+    /** Disposes this score. */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

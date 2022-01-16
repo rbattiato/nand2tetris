@@ -1,0 +1,90 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+class Obstacle {
+    field Hitbox hitbox;
+    field int x1;
+    field int y1;
+    field int x2;
+    field int y2;
+    
+    /** Constructs a new Obstacle. */
+    constructor Obstacle new() {
+        let x1 = 495;
+        let y1 = 168;
+        let x2 = x1 + 16;
+        let y2 = y1 + 16;
+
+        let hitbox = Hitbox.new(x1, y1, x2, y2);
+        do draw();
+        return this;
+    }
+
+    /** Hitbox getter */
+    method Hitbox getHitbox() {
+        return hitbox;
+    }
+
+
+    /** Moves the obstacle left by a certain length, in pixels. */
+    method void moveLeft(int length) {
+        do erase();
+        let x1 = x1 - length;
+        let x2 = x2 - length;
+        do hitbox.translate(x1, y1, x2, y2);
+
+        if (x2 > 0) { do draw(); }
+        return;
+    }
+
+
+    /** Draws the obstacle. Thanks to Golan Parashi for the Bitmap Editor */
+    method void draw() {
+        var int location, memAddress;
+        let location = Utils.getScreenLocation(x1, y1);
+	    let memAddress = 16384+location;
+        do Memory.poke(memAddress+0, 384);
+        do Memory.poke(memAddress+32, 960);
+        do Memory.poke(memAddress+64, 960);
+        do Memory.poke(memAddress+96, 964);
+        do Memory.poke(memAddress+128, 9158);
+        do Memory.poke(memAddress+160, 13254);
+        do Memory.poke(memAddress+192, 13262);
+        do Memory.poke(memAddress+224, 13308);
+        do Memory.poke(memAddress+256, 13304);
+        do Memory.poke(memAddress+288, 16320);
+        do Memory.poke(memAddress+320, 8128);
+        do Memory.poke(memAddress+352, 960);
+        do Memory.poke(memAddress+384, 960);
+        do Memory.poke(memAddress+416, 960);
+        do Memory.poke(memAddress+448, 960);
+        do Memory.poke(memAddress+480, 960);
+	    return;
+    }
+
+    /** Check if obstacle has reached the left end of the screen */
+    method boolean readyToClear() {
+        var boolean ready;
+        if ((x1 = 10) | (x1 < 10)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /** Erases the obstacle. */
+    method void erase() {
+        do hitbox.paint(false);
+        return;
+    }
+
+    /** Disposes the obstacle. */
+    method void dispose() {
+        do hitbox.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

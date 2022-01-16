@@ -1,0 +1,119 @@
+// A Dinosaur game inspired by the famous
+// Google Chrome's T-Rex Runner.
+// made by Riccardo Battiato, December 2021
+// check out my other projects at:
+// https://github.com/rbattiato/nand2tetris
+
+class Dinosaur {
+    field Hitbox hitbox;
+    field boolean jumping;
+    field int x1;
+    field int y1;
+    field int x2;
+    field int y2;
+    static int jumpLimit;
+
+    /** Constructs a new Dinosaur. */
+    constructor Dinosaur new() {
+        let x1 = 50;
+        let y1 = 168;
+        let x2 = x1 + 16;
+        let y2 = y1 + 16;
+
+        let jumpLimit = y2 - 100; // base bottom Y - 80, arbitrarily
+        let jumping = false;
+
+        let hitbox = Hitbox.new(x1, y1, x2, y2);
+        do draw();
+        return this;
+    }
+
+    /** Hitbox getter */
+    method Hitbox getHitbox() {
+        return hitbox;
+    }
+
+    /** Makes the dinosaur jump. */
+    method void jump() {
+        if (y2 = 184) {
+            let jumping = true;
+        }
+        return;
+    }
+    
+    /** Makes the dinosaur move according to "jumping" */
+    method void move() {
+        /* Let's check if we reached jump limit first */
+        if (y2 = jumpLimit) { let jumping = false; }
+
+        if (jumping) {
+            do moveTop(5);
+        } else {
+            if (y2 < 184) {
+                do moveBottom(5);
+            }
+        }
+        
+        return;
+    }
+
+    /** Makes the dinosaur move to top */
+    method void moveTop(int length) {
+        do erase();
+        let y1 = y1 - length;
+        let y2 = y2 - length;
+        do hitbox.translate(x1, y1, x2, y2);
+
+        if (y2 > 0) { do draw(); }
+        return;
+    }
+
+    /** Makes the dinosaur move to bottom */
+    method void moveBottom(int length) {
+        do erase();
+        let y1 = y1 + length;
+        let y2 = y2 + length;
+        do hitbox.translate(x1, y1, x2, y2);
+
+        if (y1 < 255) { do draw(); }
+        return;
+    }
+
+    /** Draws the dinosaur. Thanks to Golan Parashi for the Bitmap Editor */
+    method void draw() {
+        var int location, memAddress;
+        let location = Utils.getScreenLocation(x1, y1);
+	    let memAddress = 16384+location;
+        do Memory.poke(memAddress+0, 31744);
+        do Memory.poke(memAddress+32, -256);
+        do Memory.poke(memAddress+64, -2304);
+        do Memory.poke(memAddress+96, -256);
+        do Memory.poke(memAddress+128, -256);
+        do Memory.poke(memAddress+160, 3841);
+        do Memory.poke(memAddress+192, 32641);
+        do Memory.poke(memAddress+224, 4035);
+        do Memory.poke(memAddress+256, 16359);
+        do Memory.poke(memAddress+288, 12287);
+        do Memory.poke(memAddress+320, 2046);
+        do Memory.poke(memAddress+352, 1020);
+        do Memory.poke(memAddress+384, 888);
+        do Memory.poke(memAddress+416, 560);
+        do Memory.poke(memAddress+448, 528);
+        do Memory.poke(memAddress+480, 1584);
+	    return;
+    }
+
+    /** Erases the dinosaur. */
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x1, y1, x2, y2);
+        return;
+    }
+
+    /** Disposes the dinosaur. */
+    method void dispose() {
+        do hitbox.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}
